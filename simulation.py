@@ -134,10 +134,10 @@ STRATEGY_MAP = {
 }
 
 COUNTRY_PRESETS = {
-    "한국 (MBTI 기반)": {"Always Cooperate": 16, "Always Cheat": 6,  "Copycat": 16, "Grudger": 5, "Detective": 9},
-    "일본 (MBTI 기반)": {"Always Cooperate": 16, "Always Cheat": 5,  "Copycat": 18, "Grudger": 4, "Detective": 9},
-    "중국 (MBTI 기반)": {"Always Cooperate": 19, "Always Cheat": 7,  "Copycat": 12, "Grudger": 5, "Detective": 8},
-    "미국 (MBTI 기반)": {"Always Cooperate": 18, "Always Cheat": 6,  "Copycat": 17, "Grudger": 5, "Detective": 8},
+    "한국 (MBTI 기반)": {"Always Cooperate": 33, "Always Cheat": 7,  "Copycat": 20, "Grudger": 13, "Detective": 27},
+    "일본 (MBTI 기반)": {"Always Cooperate": 37, "Always Cheat": 6,  "Copycat": 17, "Grudger": 14, "Detective": 26},
+    "중국 (MBTI 기반)": {"Always Cooperate": 26, "Always Cheat": 8,  "Copycat": 24, "Grudger": 13, "Detective": 29},
+    "미국 (MBTI 기반)": {"Always Cooperate": 36, "Always Cheat": 3,  "Copycat": 21, "Grudger": 11, "Detective": 29},
     "균등 분포":        {"Always Cooperate": 10, "Always Cheat": 10, "Copycat": 10, "Grudger": 10,"Detective": 10},
 }
 
