@@ -37,14 +37,17 @@ for _f in _FONT_CANDIDATES:
         break
 
 if _korean_font:
-    plt.rcParams.update({
-        "font.family": _korean_font,
-        "axes.unicode_minus": False,
-    })
-else:
-    # 폰트 없으면 unicode_minus만 꺼두고 기본 폰트 사용
-    plt.rcParams.update({"axes.unicode_minus": False})
+    fm._load_fontmanager(try_read_cache=False)
 
+    matplotlib.rcParams["font.family"] = [_korean_font]
+    matplotlib.rcParams["axes.unicode_minus"] = False
+
+    plt.rcParams["font.family"] = [_korean_font]
+    plt.rcParams["axes.unicode_minus"] = False
+
+else:
+    matplotlib.rcParams["axes.unicode_minus"] = False
+    plt.rcParams["axes.unicode_minus"] = False
 # ── KST 헬퍼 ──────────────────────────────────────────────────────
 KST = ZoneInfo("Asia/Seoul")
 
@@ -97,17 +100,33 @@ with tab1:
         st.markdown("### 🌍 시뮬레이션 설정")
         preset_name = st.selectbox("📍 나라별 MBTI 프리셋", list(COUNTRY_PRESETS.keys()))
         preset_values = COUNTRY_PRESETS[preset_name]
+        if "selected_preset" not in st.session_state:
+            st.session_state.selected_preset = preset_name
 
+        if st.session_state.selected_preset != preset_name:
+            for sname in STRATEGY_MAP:
+                st.session_state[f"pop_{sname}"] = (
+                    preset_values.get(sname, 0)
+                )
+
+            st.session_state.selected_preset = preset_name
+            st.rerun()
         st.markdown("---")
         st.markdown("#### 🏙️ 사회 구성원 설정")
 
         # ── 수정 2: number_input 값을 society dict에 실시간 수집 ──
         society = {}
+        for sname in STRATEGY_MAP:
+            if f"pop_{sname}" not in st.session_state:
+                st.session_state[f"pop_{sname}"] = (
+                    preset_values.get(sname, 0)
+                )
+              
         for sname, Cls in STRATEGY_MAP.items():
             s = Cls()
             cnt = st.number_input(
                 f"{s.emoji} {sname}", min_value=0, max_value=100,
-                value=preset_values.get(sname, 10), step=1,
+                step=1,
                 help=s.description, key=f"pop_{sname}",
             )
             if cnt > 0:
