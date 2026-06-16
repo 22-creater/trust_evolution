@@ -12,47 +12,42 @@ from collections import defaultdict
 from simulation import STRATEGY_MAP, COUNTRY_PRESETS, analyze_ai_behavior
 from simulation import AdaptiveAI, play_match
 
-# ── 한글 폰트 설정 ──────────────────────────────────────────────────
+# ── 한글 폰트 설정 (더 강력하게 적용) ──────────────────────────────────
 _FONT_CANDIDATES = [
     "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
     "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
 ]
 
-_korean_font = None
+_korean_font_path = None
 for _f in _FONT_CANDIDATES:
     if os.path.exists(_f):
-        fm.fontManager.addfont(_f)
-        _prop = fm.FontProperties(fname=_f)
-        _korean_font = _prop.get_name()
+        _korean_font_path = _f
         break
 
 def apply_korean_font(ax):
-    """차트 객체에 한글 폰트를 일괄 적용하는 함수"""
-    if _korean_font:
-        font_prop = {"family": _korean_font}
-        ax.set_title(ax.get_title(), **font_prop)
-        ax.set_xlabel(ax.get_xlabel(), **font_prop)
-        ax.set_ylabel(ax.get_ylabel(), **font_prop)
+    """차트 객체에 한글 폰트를 강제 적용하는 함수"""
+    if _korean_font_path:
+        prop = fm.FontProperties(fname=_korean_font_path)
+        # 제목 및 라벨
+        ax.set_title(ax.get_title(), fontproperties=prop)
+        ax.set_xlabel(ax.get_xlabel(), fontproperties=prop)
+        ax.set_ylabel(ax.get_ylabel(), fontproperties=prop)
+        # 범례
         if ax.get_legend():
-            plt.setp(ax.get_legend().get_texts(), **font_prop)
+            for text in ax.get_legend().get_texts():
+                text.set_fontproperties(prop)
+        # 축 눈금
         for label in ax.get_xticklabels() + ax.get_yticklabels():
-            label.set_fontproperties(fm.FontProperties(family=_korean_font))
+            label.set_fontproperties(prop)
 
-if _korean_font:
-    fm._load_fontmanager(try_read_cache=False)
-    matplotlib.rcParams["font.family"] = [_korean_font]
-    matplotlib.rcParams["axes.unicode_minus"] = False
-    plt.rcParams["font.family"] = [_korean_font]
-    plt.rcParams["axes.unicode_minus"] = False
-else:
-    matplotlib.rcParams["axes.unicode_minus"] = False
-    plt.rcParams["axes.unicode_minus"] = False
+# 전역 설정
+if _korean_font_path:
+    fm.fontManager.addfont(_korean_font_path)
+    plt.rc('font', family=fm.FontProperties(fname=_korean_font_path).get_name())
+    plt.rcParams['axes.unicode_minus'] = False
 
 # ── KST 헬퍼 ──────────────────────────────────────────────────────
 KST = ZoneInfo("Asia/Seoul")
-
 def now_kst() -> datetime:
     return datetime.now(KST)
 
