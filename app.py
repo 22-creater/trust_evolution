@@ -268,6 +268,7 @@ with tab2:
                              where=[a <= s for a, s in zip(r["generation_scores"], r["social_scores"])],
                              alpha=0.15, color="#E8952A")
             ax1.set(xlabel="세대", ylabel="평균 점수", title="AI 점수 vs 사회 평균")
+            apply_korean_font(ax1)
             ax1.legend(); ax1.grid(True, alpha=0.3)
 
             snames = list(r["strategy_scores"].keys())
@@ -277,6 +278,7 @@ with tab2:
                 ax2.text(b.get_width()+0.5, b.get_y()+b.get_height()/2,
                          f"{b.get_width():.1f}", va="center", fontsize=9, fontweight="bold")
             ax2.set(xlabel="최종 AI 점수", title="전략별 AI 성과")
+            apply_korean_font(ax2)
             ax2.grid(True, alpha=0.3, axis="x")
             plt.tight_layout(); st.pyplot(fig); plt.close()
 
@@ -297,6 +299,7 @@ with tab2:
             ax.set_xticklabels(onames, rotation=30, ha="right", fontsize=10)
             ax.set_yticklabels(rnames, fontsize=10)
             ax.set_title("AI 행동 패턴 매트릭스 (상대별 전략 유사도 %)", fontsize=13, fontweight="bold", pad=16)
+            apply_korean_font(ax)
             ax.set_xlabel("상대 전략", fontsize=11); ax.set_ylabel("레퍼런스 전략", fontsize=11)
             for i in range(len(rnames)):
                 for j in range(len(onames)):
@@ -333,6 +336,7 @@ with tab2:
                        autopct="%1.1f%%", startangle=90,
                        textprops={"fontsize": 10, "fontweight": "bold"})
                 ax.set_title("사회 구성 분포", fontsize=13, fontweight="bold", pad=16)
+                apply_korean_font(ax)
                 plt.tight_layout(); st.pyplot(fig); plt.close()
             with cc2:
                 st.markdown("#### 📋 구성원 상세")
@@ -362,6 +366,7 @@ with tab2:
                 if conv:
                     ax.axvline(conv, color="#E86B3A", linestyle=":", lw=2, label=f"수렴 시점 (세대 {conv})")
                 ax.set(xlabel="세대", ylabel="Epsilon", title="탐색률 감소 과정 (탐색 → 활용)")
+                apply_korean_font(ax)
                 ax.legend(); ax.grid(True, alpha=0.3)
                 plt.tight_layout(); st.pyplot(fig); plt.close()
                 if conv:
