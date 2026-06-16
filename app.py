@@ -12,39 +12,47 @@ from collections import defaultdict
 from simulation import STRATEGY_MAP, COUNTRY_PRESETS, analyze_ai_behavior
 from simulation import AdaptiveAI, play_match
 
-# ── 한글 폰트 설정 (폰트 렌더링 최적화) ──────────────────────────────────
-# 폰트 파일 경로 직접 지정
+# ── [가장 강력한 폰트 초기화] ──────────────────────────────────────────
+# 폰트 캐시 파일 삭제 (기존에 꼬인 설정 제거)
+font_cache_dir = os.path.join(matplotlib.get_cachedir(), 'fontlist-v330.json')
+if os.path.exists(font_cache_dir):
+    try:
+        os.remove(font_cache_dir)
+    except:
+        pass
+
+# 나눔 폰트 경로 (가장 확실한 경로)
 _FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
 
 def apply_korean_font(ax):
-    """기존 기능 그대로, 폰트만 강제 적용하는 함수"""
+    """모든 텍스트 요소에 폰트 강제 적용"""
     if os.path.exists(_FONT_PATH):
         prop = fm.FontProperties(fname=_FONT_PATH)
-        # 제목, 라벨, 틱(눈금)에 폰트 강제 적용
+        # 제목 및 라벨
         ax.set_title(ax.get_title(), fontproperties=prop)
         ax.set_xlabel(ax.get_xlabel(), fontproperties=prop)
         ax.set_ylabel(ax.get_ylabel(), fontproperties=prop)
         
-        # 범례가 있다면 적용
+        # 범례
         if ax.get_legend():
             for text in ax.get_legend().get_texts():
                 text.set_fontproperties(prop)
-            
-        # 축 눈금(Ticks) 폰트 적용
+        
+        # 축 눈금
         for label in ax.get_xticklabels() + ax.get_yticklabels():
             label.set_fontproperties(prop)
 
 # Matplotlib 전역 설정
 if os.path.exists(_FONT_PATH):
     fm.fontManager.addfont(_FONT_PATH)
-    plt.rcParams["font.family"] = fm.FontProperties(fname=_FONT_PATH).get_name()
+    plt.rcParams["font.family"] = "NanumGothic"
     plt.rcParams["axes.unicode_minus"] = False
 else:
+    # 폰트가 없는 경우를 대비한 안전 장치
     plt.rcParams["axes.unicode_minus"] = False
 
 # ── KST 헬퍼 ──────────────────────────────────────────────────────
 KST = ZoneInfo("Asia/Seoul")
-
 def now_kst() -> datetime:
     return datetime.now(KST)
 
