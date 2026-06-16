@@ -12,13 +12,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import os, time
+import os
 from datetime import datetime
 from collections import defaultdict
 
 from simulation import STRATEGY_MAP, COUNTRY_PRESETS, analyze_ai_behavior
 from simulation import AdaptiveAI, play_match
-from db import init_db, save_experiment, load_experiments, load_experiment_detail, delete_experiment
 
 # 한글 폰트
 for _f in ["/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
@@ -47,8 +46,6 @@ for key, default in [("results", None)]:
     if key not in st.session_state:
         st.session_state[key] = default
 
-init_db()
-
 # 헤더
 c1, c2 = st.columns([5, 1])
 with c1:
@@ -63,7 +60,7 @@ with c2:
     )
 st.divider()
 
-tab1, tab2, tab3 = st.tabs(["🚀 새 시뮬레이션", "📊 결과 분석", "💾 실험 기록"])
+tab1, tab2 = st.tabs(["🚀 새 시뮬레이션", "📊 결과 분석"])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # TAB 1
@@ -165,10 +162,6 @@ with tab1:
             m2.metric("최종 사회 평균", f"{soc_scores[-1]:.2f}")
             m3.metric("점수 변화",     f"{gen_scores[-1]-gen_scores[0]:+.2f}")
             m4.metric("총 세대",       num_generations)
-
-            if st.button("💾 실험 결과 저장", use_container_width=True):
-                if save_experiment(preset_name, results):
-                    st.success("저장 완료!")
 
         elif st.session_state.results:
             r = st.session_state.results
@@ -319,39 +312,3 @@ with tab2:
                 plt.tight_layout(); st.pyplot(fig); plt.close()
                 if conv:
                     st.info(f"**세대 {conv} 이후 AI가 학습된 전략을 주로 활용합니다.** 이 시점부터 AI 점수와 사회 평균의 격차가 벌어집니다.")
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tab3:
-    st.markdown("### 💾 저장된 실험 기록")
-    if st.button("🔄 새로고침"):
-        st.rerun()
-
-    experiments = load_experiments()
-    if not experiments:
-        st.info("아직 저장된 실험이 없습니다.")
-    else:
-        for exp in experiments:
-            with st.expander(
-                f"🧪 {exp['preset_name']}  |  세대: {exp['num_generations']}  |  "
-                f"AI: {exp['final_ai_score']:.2f}  |  {exp['created_at'][:16]}"
-            ):
-                c1, c2, c3 = st.columns([2, 2, 1])
-                with c1:
-                    st.markdown(f"**프리셋:** {exp['preset_name']}")
-                    st.markdown(f"**라운드:** {exp['num_rounds']} | **세대:** {exp['num_generations']}")
-                with c2:
-                    st.markdown(f"**AI 점수:** {exp['final_ai_score']:.2f}")
-                    st.markdown(f"**사회 점수:** {exp['final_social_score']:.2f}")
-                with c3:
-                    if st.button("📂 불러오기", key=f"load_{exp['id']}"):
-                        detail = load_experiment_detail(exp["id"])
-                        if detail:
-                            st.session_state.results = detail
-                            st.success("불러오기 완료!")
-                    if st.button("🗑 삭제", key=f"del_{exp['id']}"):
-                        if delete_experiment(exp["id"]):
-                            st.success("삭제 완료!")
-                            time.sleep(0.5)
-                            st.rerun()
