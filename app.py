@@ -1,11 +1,3 @@
-"""
-app.py - 신뢰의 진화 Streamlit 앱
-수정사항:
-  1. 한글 폰트 적용 안정화 (캐시 갱신 + 폰트 검증)
-  2. 사회 구성원 실시간 반영 (society dict 기반으로 미리보기 표시)
-  3. KST 시간 표시 (zoneinfo 사용)
-"""
-
 import streamlit as st
 import numpy as np
 import matplotlib
@@ -20,34 +12,36 @@ from collections import defaultdict
 from simulation import STRATEGY_MAP, COUNTRY_PRESETS, analyze_ai_behavior
 from simulation import AdaptiveAI, play_match
 
-# ── 한글 폰트 설정 ──────────────────────────────────────────────────
-_FONT_CANDIDATES = [
-    "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-    "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",   # 최후 fallback
-]
+# ── 한글 폰트 설정 (폰트 렌더링 최적화) ──────────────────────────────────
+# 폰트 파일 경로 직접 지정
+_FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
 
-_korean_font = None
-for _f in _FONT_CANDIDATES:
-    if os.path.exists(_f):
-        fm.fontManager.addfont(_f)
-        _prop = fm.FontProperties(fname=_f)
-        _korean_font = _prop.get_name()
-        break
+def apply_korean_font(ax):
+    """기존 기능 그대로, 폰트만 강제 적용하는 함수"""
+    if os.path.exists(_FONT_PATH):
+        prop = fm.FontProperties(fname=_FONT_PATH)
+        # 제목, 라벨, 틱(눈금)에 폰트 강제 적용
+        ax.set_title(ax.get_title(), fontproperties=prop)
+        ax.set_xlabel(ax.get_xlabel(), fontproperties=prop)
+        ax.set_ylabel(ax.get_ylabel(), fontproperties=prop)
+        
+        # 범례가 있다면 적용
+        if ax.get_legend():
+            for text in ax.get_legend().get_texts():
+                text.set_fontproperties(prop)
+            
+        # 축 눈금(Ticks) 폰트 적용
+        for label in ax.get_xticklabels() + ax.get_yticklabels():
+            label.set_fontproperties(prop)
 
-if _korean_font:
-    fm._load_fontmanager(try_read_cache=False)
-
-    matplotlib.rcParams["font.family"] = [_korean_font]
-    matplotlib.rcParams["axes.unicode_minus"] = False
-
-    plt.rcParams["font.family"] = [_korean_font]
+# Matplotlib 전역 설정
+if os.path.exists(_FONT_PATH):
+    fm.fontManager.addfont(_FONT_PATH)
+    plt.rcParams["font.family"] = fm.FontProperties(fname=_FONT_PATH).get_name()
     plt.rcParams["axes.unicode_minus"] = False
-
 else:
-    matplotlib.rcParams["axes.unicode_minus"] = False
     plt.rcParams["axes.unicode_minus"] = False
+
 # ── KST 헬퍼 ──────────────────────────────────────────────────────
 KST = ZoneInfo("Asia/Seoul")
 
