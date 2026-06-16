@@ -1,9 +1,9 @@
 """
 app.py - 신뢰의 진화 Streamlit 앱
-핵심 수정:
-  1. society/설정값을 session_state에 저장 → rerun해도 안 날아감
-  2. 시뮬레이션을 rerun 루프 없이 한 번에 실행 → progress는 st.progress로 단순하게
-  3. simulation_running 플래그 제거 → 그냥 버튼 누르면 blocking 실행
+수정사항:
+  1. 한글 폰트 적용 안정화 (캐시 갱신 + 폰트 검증)
+  2. 사회 구성원 실시간 반영 (society dict 기반으로 미리보기 표시)
+  3. KST 시간 표시 (zoneinfo 사용)
 """
 
 import streamlit as st
@@ -14,18 +14,44 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from collections import defaultdict
 
 from simulation import STRATEGY_MAP, COUNTRY_PRESETS, analyze_ai_behavior
 from simulation import AdaptiveAI, play_match
 
-# 한글 폰트
-for _f in ["/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-           "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf"]:
+# ── 한글 폰트 설정 ──────────────────────────────────────────────────
+_FONT_CANDIDATES = [
+    "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+    "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",   # 최후 fallback
+]
+
+_korean_font = None
+for _f in _FONT_CANDIDATES:
     if os.path.exists(_f):
         fm.fontManager.addfont(_f)
-plt.rcParams.update({"font.family": "NanumGothic", "axes.unicode_minus": False})
+        _prop = fm.FontProperties(fname=_f)
+        _korean_font = _prop.get_name()
+        break
 
+if _korean_font:
+    plt.rcParams.update({
+        "font.family": _korean_font,
+        "axes.unicode_minus": False,
+    })
+else:
+    # 폰트 없으면 unicode_minus만 꺼두고 기본 폰트 사용
+    plt.rcParams.update({"axes.unicode_minus": False})
+
+# ── KST 헬퍼 ──────────────────────────────────────────────────────
+KST = ZoneInfo("Asia/Seoul")
+
+def now_kst() -> datetime:
+    return datetime.now(KST)
+
+# ── 페이지 설정 ───────────────────────────────────────────────────
 st.set_page_config(page_title="신뢰의 진화", page_icon="🤖", layout="wide")
 
 st.markdown("""
@@ -41,12 +67,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 세션 초기화
-for key, default in [("results", None)]:
-    if key not in st.session_state:
-        st.session_state[key] = default
+# ── 세션 초기화 ───────────────────────────────────────────────────
+if "results" not in st.session_state:
+    st.session_state["results"] = None
 
-# 헤더
+# ── 헤더 ─────────────────────────────────────────────────────────
 c1, c2 = st.columns([5, 1])
 with c1:
     st.markdown("# 🤖 신뢰의 진화 — AI 학습 시뮬레이션")
@@ -55,7 +80,7 @@ with c2:
     st.markdown(
         f"<div style='text-align:right;padding-top:14px;'>"
         f"<span style='font-size:18px;font-weight:700;color:#2E86AB;'>"
-        f"🕐 {datetime.now().strftime('%H:%M:%S')}</span></div>",
+        f"🕐 {now_kst().strftime('%H:%M:%S')} KST</span></div>",
         unsafe_allow_html=True,
     )
 st.divider()
@@ -75,6 +100,8 @@ with tab1:
 
         st.markdown("---")
         st.markdown("#### 🏙️ 사회 구성원 설정")
+
+        # ── 수정 2: number_input 값을 society dict에 실시간 수집 ──
         society = {}
         for sname, Cls in STRATEGY_MAP.items():
             s = Cls()
@@ -102,13 +129,12 @@ with tab1:
         if run_btn:
             prog_bar = st.progress(0)
             stat_cols = st.columns(3)
-            gen_ph  = stat_cols[0].empty()
-            ai_ph   = stat_cols[1].empty()
-            soc_ph  = stat_cols[2].empty()
-            msg_ph  = st.empty()
+            gen_ph = stat_cols[0].empty()
+            ai_ph  = stat_cols[1].empty()
+            soc_ph = stat_cols[2].empty()
+            msg_ph = st.empty()
             msg_ph.info("🤖 AI가 학습 중입니다...")
 
-            # 시뮬루프 직접 실행
             population = [STRATEGY_MAP[n]() for n, c in society.items() for _ in range(c)]
             ai = AdaptiveAI()
             gen_scores, soc_scores = [], []
@@ -147,12 +173,17 @@ with tab1:
 
             final_sim = analyze_ai_behavior(ai)
             results = {
-                "generation_scores": gen_scores, "social_scores": soc_scores,
-                "strategy_scores": dict(strat_scores), "epsilon_history": eps_hist,
-                "similarity_evolution": sim_evo, "final_similarity": final_sim,
-                "society": society, "num_rounds": num_rounds,
-                "num_generations": num_generations, "preset_name": preset_name,
-                "timestamp": datetime.now().isoformat(),
+                "generation_scores": gen_scores,
+                "social_scores": soc_scores,
+                "strategy_scores": dict(strat_scores),
+                "epsilon_history": eps_hist,
+                "similarity_evolution": sim_evo,
+                "final_similarity": final_sim,
+                "society": society,
+                "num_rounds": num_rounds,
+                "num_generations": num_generations,
+                "preset_name": preset_name,
+                "timestamp": now_kst().isoformat(),
             }
             st.session_state.results = results
             msg_ph.success("✅ 완료! '결과 분석' 탭에서 확인하세요.")
@@ -171,12 +202,16 @@ with tab1:
             m2.metric("최종 사회 평균", f"{r['social_scores'][-1]:.2f}")
             m3.metric("점수 변화",     f"{r['generation_scores'][-1]-r['generation_scores'][0]:+.2f}")
             m4.metric("총 세대",       r["num_generations"])
+
         else:
             st.info("왼쪽에서 설정 후 시뮬레이션 시작 버튼을 클릭하세요.")
-            st.markdown("#### 📊 현재 프리셋 구성")
-            for sname, cnt in preset_values.items():
+
+            # ── 수정 2: preset_values 대신 society(실제 입력값) 사용 ──
+            st.markdown("#### 📊 현재 구성원 설정")
+            current_total = sum(society.values()) if society else 1
+            for sname, cnt in society.items():
                 s = STRATEGY_MAP[sname]()
-                pct = cnt / sum(preset_values.values()) * 100
+                pct = cnt / current_total * 100
                 st.markdown(
                     f"<div style='margin:6px 0;'><span style='font-size:18px;'>{s.emoji}</span> "
                     f"<strong>{sname}</strong>: {cnt}명 ({pct:.1f}%)</div>",
@@ -213,7 +248,7 @@ with tab2:
             ax1.fill_between(gens, r["generation_scores"], r["social_scores"],
                              where=[a <= s for a, s in zip(r["generation_scores"], r["social_scores"])],
                              alpha=0.15, color="#E8952A")
-            ax1.set(xlabel="세대", ylabel="평균 점수", title="📊 AI 점수 vs 사회 평균")
+            ax1.set(xlabel="세대", ylabel="평균 점수", title="AI 점수 vs 사회 평균")
             ax1.legend(); ax1.grid(True, alpha=0.3)
 
             snames = list(r["strategy_scores"].keys())
@@ -222,7 +257,7 @@ with tab2:
             for b in bars:
                 ax2.text(b.get_width()+0.5, b.get_y()+b.get_height()/2,
                          f"{b.get_width():.1f}", va="center", fontsize=9, fontweight="bold")
-            ax2.set(xlabel="최종 AI 점수", title="📊 전략별 AI 성과")
+            ax2.set(xlabel="최종 AI 점수", title="전략별 AI 성과")
             ax2.grid(True, alpha=0.3, axis="x")
             plt.tight_layout(); st.pyplot(fig); plt.close()
 
@@ -242,7 +277,7 @@ with tab2:
             ax.set_xticks(range(len(onames))); ax.set_yticks(range(len(rnames)))
             ax.set_xticklabels(onames, rotation=30, ha="right", fontsize=10)
             ax.set_yticklabels(rnames, fontsize=10)
-            ax.set_title("🧠 AI 행동 패턴 매트릭스 (상대별 전략 유사도 %)", fontsize=13, fontweight="bold", pad=16)
+            ax.set_title("AI 행동 패턴 매트릭스 (상대별 전략 유사도 %)", fontsize=13, fontweight="bold", pad=16)
             ax.set_xlabel("상대 전략", fontsize=11); ax.set_ylabel("레퍼런스 전략", fontsize=11)
             for i in range(len(rnames)):
                 for j in range(len(onames)):
@@ -278,7 +313,7 @@ with tab2:
                        colors=plt.cm.Pastel1(range(len(soc))),
                        autopct="%1.1f%%", startangle=90,
                        textprops={"fontsize": 10, "fontweight": "bold"})
-                ax.set_title("🏙️ 사회 구성 분포", fontsize=13, fontweight="bold", pad=16)
+                ax.set_title("사회 구성 분포", fontsize=13, fontweight="bold", pad=16)
                 plt.tight_layout(); st.pyplot(fig); plt.close()
             with cc2:
                 st.markdown("#### 📋 구성원 상세")
@@ -307,7 +342,7 @@ with tab2:
                 conv = next((i for i, e in enumerate(eps) if e <= 0.1), None)
                 if conv:
                     ax.axvline(conv, color="#E86B3A", linestyle=":", lw=2, label=f"수렴 시점 (세대 {conv})")
-                ax.set(xlabel="세대", ylabel="Epsilon", title="📉 탐색률 감소 과정 (탐색 → 활용)")
+                ax.set(xlabel="세대", ylabel="Epsilon", title="탐색률 감소 과정 (탐색 → 활용)")
                 ax.legend(); ax.grid(True, alpha=0.3)
                 plt.tight_layout(); st.pyplot(fig); plt.close()
                 if conv:
