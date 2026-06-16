@@ -36,7 +36,6 @@ st.markdown("""
     margin: 1.5rem 0; 
   }
 
-  /* 메트릭 카드 */
   div[data-testid="metric-container"] {
     background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
     border: 1px solid #E0DED8;
@@ -50,7 +49,6 @@ st.markdown("""
     transition: all 0.3s ease;
   }
 
-  /* 카드 컨테이너 */
   .card-container {
     background: white;
     border: 1.5px solid #E0DED8;
@@ -60,7 +58,6 @@ st.markdown("""
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
 
-  /* 전략 태그 */
   .strategy-tag {
     display: inline-block;
     padding: 6px 14px;
@@ -73,7 +70,6 @@ st.markdown("""
     box-shadow: 0 2px 6px rgba(46,134,171,0.3);
   }
 
-  /* 프로그레스 바 래퍼 */
   .progress-wrapper {
     background: white;
     border: 1.5px solid #E0DED8;
@@ -82,7 +78,6 @@ st.markdown("""
     margin-bottom: 16px;
   }
 
-  /* 버튼 스타일 */
   .stButton > button {
     border-radius: 10px;
     font-weight: 600;
@@ -95,7 +90,6 @@ st.markdown("""
     transform: translateY(-2px);
   }
 
-  /* 실험 목록 카드 */
   .experiment-card {
     background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
     border: 1px solid #E0DED8;
@@ -111,13 +105,11 @@ st.markdown("""
     transform: translateY(-2px);
   }
 
-  /* 헤더 스타일 */
   h1, h2, h3 {
     color: #2C2C2A;
     font-weight: 700;
   }
 
-  /* 탭 스타일 */
   .stTabs [data-baseweb="tab-list"] {
     gap: 8px;
   }
@@ -129,7 +121,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── 세션 초기화 ────────────────────────────────────────────────
 if "simulation_running" not in st.session_state:
     st.session_state.simulation_running = False
 if "current_results" not in st.session_state:
@@ -139,7 +130,6 @@ if "progress_data" not in st.session_state:
 
 init_db()
 
-# ── 헤더 ──────────────────────────────────────────────────────
 col1, col2 = st.columns([4, 1])
 with col1:
     st.markdown("# 🤖 신뢰의 진화 - AI 학습 시뮬레이션")
@@ -155,19 +145,14 @@ with col2:
 
 st.divider()
 
-# ── 메인 탭 ──────────────────────────────────────────────────
 tab1, tab2, tab3 = st.tabs(["🚀 새 시뮬레이션", "📊 결과 분석", "💾 실험 기록"])
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 1: 새 시뮬레이션
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab1:
     col_left, col_right = st.columns([2, 3])
 
     with col_left:
         st.markdown("### 🌍 시뮬레이션 설정")
 
-        # 나라별 프리셋
         preset_name = st.selectbox(
             "📍 나라별 MBTI 프리셋",
             options=list(COUNTRY_PRESETS.keys()),
@@ -176,7 +161,6 @@ with tab1:
 
         st.markdown("---")
 
-        # 전략별 인구 조정
         st.markdown("#### 🏙️ 사회 구성원 설정")
         society = {}
         preset_values = COUNTRY_PRESETS[preset_name]
@@ -201,14 +185,12 @@ with tab1:
 
         st.markdown("---")
 
-        # 환경 설정
         st.markdown("#### ⚙️ 환경 설정")
         num_rounds = st.slider("매치당 라운드", 10, 500, 100, 10)
         num_generations = st.slider("학습 세대", 10, 1000, 200, 10)
 
         st.markdown("---")
 
-        # 실행 버튼
         if st.session_state.simulation_running:
             if st.button("⏹ 시뮬레이션 중지", type="secondary", use_container_width=True):
                 st.session_state.simulation_running = False
@@ -226,21 +208,17 @@ with tab1:
     with col_right:
         st.markdown("### 📈 실시간 모니터링")
 
-        # 진행 상황
         if st.session_state.simulation_running:
             progress_data = st.session_state.progress_data
 
-            # 프로그레스 바
             progress_pct = progress_data["generation"] / progress_data["total"] * 100 if progress_data["total"] > 0 else 0
             st.progress(progress_pct / 100)
 
-            # 메트릭
             m1, m2, m3 = st.columns(3)
             m1.metric("진행 세대", f"{progress_data['generation']} / {progress_data['total']}")
             m2.metric("AI 점수", f"{progress_data['ai_score']:.2f}")
             m3.metric("사회 평균", f"{progress_data['social_score']:.2f}")
 
-            # 시뮬레이션 실행
             def progress_callback(gen, total, ai_score, social_score):
                 st.session_state.progress_data = {
                     "generation": gen,
@@ -261,7 +239,6 @@ with tab1:
 
             st.success("✅ 시뮬레이션 완료!")
 
-            # 요약 메트릭
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("최종 AI 점수", f"{results['generation_scores'][-1]:.2f}")
             m2.metric("사회 평균", f"{results['social_scores'][-1]:.2f}")
@@ -269,7 +246,6 @@ with tab1:
             m3.metric("점수 변화", f"{score_change:+.2f}")
             m4.metric("총 세대", results['num_generations'])
 
-            # 저장 버튼
             if st.button("💾 실험 결과 저장", use_container_width=True):
                 if save_experiment(preset_name, results):
                     st.success("저장 완료!")
@@ -279,7 +255,6 @@ with tab1:
         else:
             st.info("왼쪽에서 설정을 완료하고 '시뮬레이션 시작' 버튼을 클릭하세요.")
 
-            # 프리셋 미리보기
             st.markdown("#### 📊 현재 프리셋 구성")
             preset_data = COUNTRY_PRESETS[preset_name]
 
@@ -294,16 +269,12 @@ with tab1:
                     unsafe_allow_html=True
                 )
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 2: 결과 분석
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab2:
     if st.session_state.current_results:
         results = st.session_state.current_results
 
         st.markdown("### 📊 시뮬레이션 결과 분석")
 
-        # 기본 정보
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("총 세대", results['num_generations'])
         col2.metric("매치당 라운드", results['num_rounds'])
@@ -313,13 +284,11 @@ with tab2:
 
         st.divider()
 
-        # 차트 영역
         chart_tab1, chart_tab2, chart_tab3 = st.tabs(["📈 점수 추이", "🧠 행동 패턴", "🏙️ 사회 구성"])
 
         with chart_tab1:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
-            # AI vs 사회 점수
             generations = range(1, len(results['generation_scores']) + 1)
             ax1.plot(list(generations), results['generation_scores'], 
                     linewidth=2.5, color='#2E86AB', label='AI 개인 점수', marker='o', markersize=3, markevery=len(list(generations))//20)
@@ -333,7 +302,6 @@ with tab2:
             ax1.legend(fontsize=10)
             ax1.grid(True, alpha=0.3, linestyle=':', linewidth=0.8)
 
-            # 전략별 성과
             strategy_names = list(results['strategy_scores'].keys())
             final_scores = [results['strategy_scores'][name][-1] for name in strategy_names]
             colors = plt.cm.Set3(range(len(strategy_names)))
@@ -379,7 +347,6 @@ with tab2:
             st.pyplot(fig)
             plt.close()
 
-            # 분석 결과 텍스트
             st.markdown("#### 💡 행동 패턴 분석")
 
             dominant_counts = {}
@@ -429,9 +396,6 @@ with tab2:
     else:
         st.info("아직 시뮬레이션 결과가 없습니다. '새 시뮬레이션' 탭에서 실행해주세요.")
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3: 실험 기록
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tab3:
     st.markdown("### 💾 저장된 실험 기록")
 
@@ -473,7 +437,6 @@ with tab3:
     else:
         st.info("아직 저장된 실험이 없습니다. 시뮬레이션 완료 후 저장해주세요.")
 
-# ── 자동 새로고침 (시뮬레이션 실행 중에만) ────────────────────
 if st.session_state.simulation_running:
     time.sleep(0.5)
     st.rerun()
