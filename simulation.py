@@ -67,14 +67,14 @@ class Detective(Strategy):
         return True
 
 
-class Simpleton(Strategy):
-    def __init__(self):
-        super().__init__("Simpleton", "상대가 협력하면 같은 행동을, 배신하면 행동을 바꿉니다.", "😊")
-    def reset(self): self.last_move = True
-    def decide(self, h):
-        if not h: return True
-        self.last_move = self.last_move if h[-1] else not self.last_move
-        return self.last_move
+# class Simpleton(Strategy):
+#     def __init__(self):
+#         super().__init__("Simpleton", "상대가 협력하면 같은 행동을, 배신하면 행동을 바꿉니다.", "😊")
+#     def reset(self): self.last_move = True
+#     def decide(self, h):
+#         if not h: return True
+#         self.last_move = self.last_move if h[-1] else not self.last_move
+#         return self.last_move
 
 
 class AdaptiveAI(Strategy):
@@ -130,15 +130,15 @@ STRATEGY_MAP = {
     "Copycat":          Copycat,
     "Grudger":          Grudger,
     "Detective":        Detective,
-    "Simpleton":        Simpleton,
+    # "Simpleton":        Simpleton,
 }
 
 COUNTRY_PRESETS = {
-    "한국 (MBTI 기반)": {"Always Cooperate": 16, "Always Cheat": 6,  "Copycat": 16, "Grudger": 5, "Detective": 9, "Simpleton": 8},
-    "일본 (MBTI 기반)": {"Always Cooperate": 16, "Always Cheat": 5,  "Copycat": 18, "Grudger": 4, "Detective": 9, "Simpleton": 7},
-    "중국 (MBTI 기반)": {"Always Cooperate": 19, "Always Cheat": 7,  "Copycat": 12, "Grudger": 5, "Detective": 8, "Simpleton": 9},
-    "미국 (MBTI 기반)": {"Always Cooperate": 18, "Always Cheat": 6,  "Copycat": 17, "Grudger": 5, "Detective": 8, "Simpleton": 6},
-    "균등 분포":        {"Always Cooperate": 10, "Always Cheat": 10, "Copycat": 10, "Grudger": 10,"Detective": 10,"Simpleton": 10},
+    "한국 (MBTI 기반)": {"Always Cooperate": 16, "Always Cheat": 6,  "Copycat": 16, "Grudger": 5, "Detective": 9},
+    "일본 (MBTI 기반)": {"Always Cooperate": 16, "Always Cheat": 5,  "Copycat": 18, "Grudger": 4, "Detective": 9},
+    "중국 (MBTI 기반)": {"Always Cooperate": 19, "Always Cheat": 7,  "Copycat": 12, "Grudger": 5, "Detective": 8},
+    "미국 (MBTI 기반)": {"Always Cooperate": 18, "Always Cheat": 6,  "Copycat": 17, "Grudger": 5, "Detective": 8},
+    "균등 분포":        {"Always Cooperate": 10, "Always Cheat": 10, "Copycat": 10, "Grudger": 10,"Detective": 10},
 }
 
 
